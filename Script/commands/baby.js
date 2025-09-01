@@ -79,7 +79,6 @@ module.exports.handleEvent = async function ({ api, event }) {
  const link = `${await baseApiUrl()}/baby`;
  
  if (!arr) {
- const randomTexts = [
 const randomTexts = [
  "তোরে ব্লক কইরা দিলে শান্তি পাইতাম 😂",
  "ডাকিস না, নাহলে সাইলেন্ট মোড অন করে দিবো 🔕",
