@@ -72,7 +72,7 @@ module.exports.handleReply = async function ({ api, event, handleReply }) {
 module.exports.handleEvent = async function ({ api, event }) {
  try {
  const body = event.body ? event.body.toLowerCase() : "";
- const keywords = ["baby", "bby", "bot", "babu", "bepi", "jaan", "janu", "xan", "বট", "বেবি", "বেপি"];
+ const keywords = ["baby", "bby", "bot", "babu", "Akash", "jaan", "janu", "xan", "বট", "বেবি", "Raisa"];
 
  if (keywords.some(word => body.startsWith(word))) {
  const arr = body.replace(/^\S+\s*/, "");
