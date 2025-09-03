@@ -226,13 +226,6 @@ module.exports.handleEvent = async function ({ api, event, Users }) {
   "🥖": "ব্রেড! ভাজা হোক না বা ফ্রেশ 🥖😂",
   "🥨": "প্রেটজেল! ক্যালসিয়াম আর মজা 🥨😏"
 };
-};
-  };
-  };
-  };
-  };
-  };
-
   if (responses[msg]) {
     return api.sendMessage(responses[msg], threadID, messageID);
   }
