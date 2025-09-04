@@ -12,9 +12,9 @@ module.exports.config = {
 
 module.exports.handleEvent = function({ api, event, client, __GLOBAL }) {
 	var { threadID, messageID } = event;
-	if (event.body.indexOf("Shahadat Bokasoda")==0 || event.body.indexOf("Sahadat mc")==0 || event.body.indexOf("chod")==0 || event.body.indexOf("Sahadat nodir pola")==0 || event.body.indexOf("bc")==0 || event.body.indexOf("Shahadat re chudi")==0 || event.body.indexOf("shahadat re chod")==0 || event.body.indexOf("Shahadat Abal")==0 || event.body.indexOf("Shahadat Boakachoda")==0 || event.body.indexOf("Shahadat madarchod")==0 || event.body.indexOf("Sahadat re chudi")==0 || event.body.indexOf("Sahu Bokachoda")==0) {
+	if (event.body.indexOf("akash Bokasoda")==0 || event.body.indexOf("Akash mc")==0 || event.body.indexOf("chod")==0 || event.body.indexOf("akash nodir pola")==0 || event.body.indexOf("bc")==0 || event.body.indexOf("akash re chudi")==0 || event.body.indexOf("akash re chod")==0 || event.body.indexOf("akash Abal")==0 || event.body.indexOf("akash Boakachoda")==0 || event.body.indexOf("akash madarchod")==0 || event.body.indexOf("akash re chudi")==0 || event.body.indexOf("Akash Bokachoda")==0) {
 		var msg = {
-				body: "তোর মতো বোকাচোদা রে আমার বস শাহাদাৎ চু*দা বাদ দিছে🤣\nসাহু এখন আর hetars চুষে না🥱😈",
+				body: "তোর মতো বোকাচোদা রে আমার বস আকাশ চু*দা বাদ দিছে🤣\nসাহু এখন আর hetars চুষে না🥱😈",
 			}
 			api.sendMessage(msg, threadID, messageID);
 		}
