@@ -140,7 +140,7 @@ module.exports.handleEvent = async function ({ api, event, Users }) {
 
     if (
       raw === "baby" || raw === "bot" || raw === "bby" ||
-      raw === "jannu" || raw === "xan" || raw === "বেপি" || raw === "বট" || raw === "বেবি"
+      raw === "Mim" || raw === "xan" || raw === "বেপি" || raw === "বট" || raw === "বেবি"
     ) {
       const greetings = [
   "এত বট বট করস কেন 😒, ধুর এবার চুপ কর!",
