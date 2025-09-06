@@ -41,7 +41,8 @@ module.exports.run = async ({ api, event, args, Users }) => {
  try {
  await api.sendMessage(
  {
- body: `📢 নোটিশ From Admin: (${senderName})\n\n${replyMsg.body || args.join(" ")}`,
+ body: `📢 𝙽𝚘𝚝𝚒𝚏𝚒𝚌𝚊𝚝𝚒𝚘𝚗 𝙵𝚛𝚘𝚖 : 
+ From Admin: (${senderName})\n\n${replyMsg.body || args.join(" ")}`,
  attachment: fs.createReadStream(filePath),
  },
  threadID
