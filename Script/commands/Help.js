@@ -94,11 +94,11 @@ module.exports.run = function ({ api, event, args, getText }) {
 
  const imgPath = __dirname + "/cache/helppic.jpg";
  const callback = () => api.sendMessage({ body: text, attachment: fs.createReadStream(imgPath) }, threadID, () => fs.unlinkSync(imgPath), messageID);
- return request("https://i.imgur.com/iVSE6Ga.jpeg").pipe(fs.createWriteStream(imgPath)).on("close", () => callback());
+ return request("https://i.imgur.com/fI24l0E.jpeg").pipe(fs.createWriteStream(imgPath)).on("close", () => callback());
  }
 
  const detail = getText("moduleInfo", command.config.name, "1", "1", "1", `┃ ✪ ${command.config.name} - ${command.config.description}`, prefix);
  const imgPath = __dirname + "/cache/helppic.jpg";
  const callback = () => api.sendMessage({ body: detail, attachment: fs.createReadStream(imgPath) }, threadID, () => fs.unlinkSync(imgPath), messageID);
- return request("https://i.imgur.com/iVSE6Ga.jpeg").pipe(fs.createWriteStream(imgPath)).on("close", () => callback());
+ return request("https://i.imgur.com/fI24l0E.jpeg").pipe(fs.createWriteStream(imgPath)).on("close", () => callback());
 };
