@@ -16,6 +16,9 @@ const path = require("path");
 // Text অনুযায়ী audio URL
 const textAudioMap = {
   "i love You": "https://files.catbox.moe/npy7kl.mp3",
+  "I love you": "https://files.catbox.moe/npy7kl.mp3",
+  "আই লাভ ইউ": "https://files.catbox.moe/npy7kl.mp3",
+  "apu i love you": "https://files.catbox.moe/npy7kl.mp3",
 };
 
 module.exports.handleEvent = async ({ api, event }) => {
