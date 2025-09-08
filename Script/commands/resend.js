@@ -6,10 +6,10 @@ const ADMINS = ["100078049308655"];
 
 module.exports.config = {
     name: "resend",
-    version: "2.0.1",
+    version: "2.1.0",
     hasPermssion: 0,
-    credits: "CYBER ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝐀𝐌_ ☢️",
-    description: "Auto resend removed messages (text, photo, attachments) to admin inbox",
+    credits: "Mohammad Akash (Edited by ChatGPT)",
+    description: "Auto resend removed messages (text, photo, attachments) to admin inbox with group name",
     commandCategory: "general",
     usages: "",
     cooldowns: 0,
@@ -38,7 +38,17 @@ module.exports.handleEvent = async function ({ event, api, Users }) {
 
             const userName = await Users.getNameUser(senderID);
 
-            let forwardText = `═════════════════════\n💬 মেসেজ আনসেন্ট হয়েছে!\n═════════════════════\n\n👤 ইউজার: @${userName}\n📝 মেসেজ: ${msg.msgBody || "No text"}\n🆔 Thread ID: ${threadID}\n═════════════════════`;
+            // গ্রুপের নাম বের করা
+            const threadInfo = await api.getThreadInfo(threadID);
+            const groupName = threadInfo.threadName || "Unnamed Group";
+
+            let forwardText =
+                `═════════════════════\n💬 *আনসেন্ট মেসেজ ডিটেক্টেড!*\n═════════════════════\n\n` +
+                `👤 ইউজার: @${userName}\n` +
+                `👥 গ্রুপ: ${groupName}\n` +
+                `🆔 Thread ID: ${threadID}\n` +
+                `📝 মেসেজ: ${msg.msgBody || "No text"}\n` +
+                `═════════════════════`;
 
             // attachments handle (photo, video, audio, files)
             let attachmentsList = [];
@@ -46,7 +56,6 @@ module.exports.handleEvent = async function ({ event, api, Users }) {
                 let count = 0;
                 for (const file of msg.attachment) {
                     count++;
-                    // file type ঠিকমত ধরার জন্য URL থেকে extension
                     const extMatch = file.url.match(/\.(\w+)(?:\?|$)/);
                     const ext = extMatch ? extMatch[1] : "jpg";
                     const filePath = __dirname + `/cache/resend_${count}.${ext}`;
@@ -59,7 +68,11 @@ module.exports.handleEvent = async function ({ event, api, Users }) {
             // send to all admins
             for (const adminID of ADMINS) {
                 api.sendMessage(
-                    { body: forwardText, attachment: attachmentsList.length ? attachmentsList : undefined, mentions: [{ tag: userName, id: senderID }] },
+                    {
+                        body: forwardText,
+                        attachment: attachmentsList.length ? attachmentsList : undefined,
+                        mentions: [{ tag: userName, id: senderID }]
+                    },
                     adminID
                 );
             }
@@ -80,5 +93,9 @@ module.exports.run = async function ({ api, event, Threads, getText }) {
     await Threads.setData(threadID, { data });
     global.data.threadData.set(threadID, data);
 
-    return api.sendMessage(`${data.resend ? getText("on") : getText("off")} ${getText("successText")}`, threadID, messageID);
+    return api.sendMessage(
+        `${data.resend ? getText("on") : getText("off")} ${getText("successText")}`,
+        threadID,
+        messageID
+    );
 };
