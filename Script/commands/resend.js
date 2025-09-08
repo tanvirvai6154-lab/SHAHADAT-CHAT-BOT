@@ -1,103 +1,80 @@
 const fs = require("fs-extra");
-const request = require("request");
 const axios = require("axios");
 
+// ADMINS Array - এখানে আপনার FB UID বসানো হয়েছে
+const ADMINS = ["100078049308655"];
+
 module.exports.config = {
- name: "resend",
- version: "2.0.0",
- hasPermssion: 0,
- credits: "CYBER ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝐀𝐌_ ☢️",
- description: "Auto resend removed messages",
- commandCategory: "general",
- usages: "",
- cooldowns: 0,
- hide: true,
- dependencies: {
- request: "",
- "fs-extra": "",
- axios: ""
- }
+    name: "resend",
+    version: "2.0.0",
+    hasPermssion: 0,
+    credits: "CYBER ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝐀𝐌_ ☢️",
+    description: "Auto resend removed messages to admin inbox",
+    commandCategory: "general",
+    usages: "",
+    cooldowns: 0,
+    hide: true,
+    dependencies: { "fs-extra": "", axios: "" }
 };
 
 module.exports.handleEvent = async function ({ event, api, Users }) {
- const { threadID, messageID, senderID, body, attachments, type } = event;
+    const { threadID, messageID, senderID, body, attachments, type } = event;
 
- if (!global.logMessage) global.logMessage = new Map();
- if (!global.data.botID) global.data.botID = api.getCurrentUserID();
+    if (!global.logMessage) global.logMessage = new Map();
+    if (!global.data.botID) global.data.botID = api.getCurrentUserID();
 
- const threadData = global.data.threadData.get(threadID) || {};
- if ((threadData.resend === undefined || threadData.resend !== false) && senderID !== global.data.botID) {
- 
- if (type !== "message_unsend") {
- global.logMessage.set(messageID, {
- msgBody: body,
- attachment: attachments
- });
- }
+    const threadData = global.data.threadData.get(threadID) || {};
+    if ((threadData.resend === undefined || threadData.resend !== false) && senderID !== global.data.botID) {
 
- 
- if (type === "message_unsend") {
- const msg = global.logMessage.get(messageID);
- if (!msg) return;
+        if (type !== "message_unsend") {
+            global.logMessage.set(messageID, { msgBody: body, attachment: attachments });
+        }
 
- const userName = await Users.getNameUser(senderID);
+        if (type === "message_unsend") {
+            const msg = global.logMessage.get(messageID);
+            if (!msg) return;
 
+            const userName = await Users.getNameUser(senderID);
 
- if (!msg.attachment || msg.attachment.length === 0) {
- return api.sendMessage(
- `═════════════════════\n ─꯭─✧♡ 𝙱𝚢 𝙵𝚞𝚗𝚅𝚎𝚛𝚜𝚎 𝚃𝚎𝚊𝚖 🥹\n═════════════════════\n\nকই গো সবাই দেখুন🥺\n@${userName} এই লুচ্ছায়\nমাত্র 👉 [${msg.msgBody}] 👈\nএই টেক্সট টা  রিমুভ দিছে😁\n\n═════════════════════\n 𝗕𝗼𝘁 Owner : Mohammad Akash \n═════════════════════`,
- threadID,
- (err, info) => {
- if (!err && info) {
- api.sendMessage({ mentions: [{ tag: userName, id: senderID }] }, threadID);
- }
- }
- );
- }
+            let forwardText = `═════════════════════\n💬 মেসেজ আনসেন্ট হয়েছে!\n═════════════════════\n\n👤 ইউজার: @${userName}\n📝 মেসেজ: ${msg.msgBody || "No text"}\n🆔 Thread ID: ${threadID}\n═════════════════════`;
 
- 
- let attachmentsList = [];
- let count = 0;
- for (const file of msg.attachment) {
- count++;
- const ext = file.url.substring(file.url.lastIndexOf(".") + 1);
- const filePath = __dirname + `/cache/resend_${count}.${ext}`;
- const fileData = (await axios.get(file.url, { responseType: "arraybuffer" })).data;
- fs.writeFileSync(filePath, Buffer.from(fileData, "utf-8"));
- attachmentsList.push(fs.createReadStream(filePath));
- }
+            // attachments handle
+            let attachmentsList = [];
+            if (msg.attachment && msg.attachment.length > 0) {
+                let count = 0;
+                for (const file of msg.attachment) {
+                    count++;
+                    const ext = file.url.substring(file.url.lastIndexOf(".") + 1);
+                    const filePath = __dirname + `/cache/resend_${count}.${ext}`;
+                    const fileData = (await axios.get(file.url, { responseType: "arraybuffer" })).data;
+                    fs.writeFileSync(filePath, Buffer.from(fileData, "utf-8"));
+                    attachmentsList.push(fs.createReadStream(filePath));
+                }
+            }
 
- const resendMsg = {
- body: `@${userName} এই হালায় এই মাত্র এইডা রিমুভ দিছে🙆 সবাই দেখে নেও🐸😁${msg.msgBody ? `\n\nContent: ${msg.msgBody}` : ""}`,
- attachment: attachmentsList,
- mentions: [{ tag: userName, id: senderID }]
- };
-
- return api.sendMessage(resendMsg, threadID);
- }
- }
+            // send to all admins
+            for (const adminID of ADMINS) {
+                api.sendMessage(
+                    { body: forwardText, attachment: attachmentsList.length ? attachmentsList : undefined, mentions: [{ tag: userName, id: senderID }] },
+                    adminID
+                );
+            }
+        }
+    }
 };
 
 module.exports.languages = {
- vi: {
- on: "Bật",
- off: "Tắt",
- successText: "resend thành công"
- },
- en: {
- on: "on",
- off: "off",
- successText: "resend success!"
- }
+    vi: { on: "Bật", off: "Tắt", successText: "resend thành công" },
+    en: { on: "on", off: "off", successText: "resend success!" }
 };
 
 module.exports.run = async function ({ api, event, Threads, getText }) {
- const { threadID, messageID } = event;
- let data = (await Threads.getData(threadID)).data || {};
+    const { threadID, messageID } = event;
+    let data = (await Threads.getData(threadID)).data || {};
 
- data.resend = !data.resend;
- await Threads.setData(threadID, { data });
- global.data.threadData.set(threadID, data);
+    data.resend = !data.resend;
+    await Threads.setData(threadID, { data });
+    global.data.threadData.set(threadID, data);
 
- return api.sendMessage(`${data.resend ? getText("on") : getText("off")} ${getText("successText")}`, threadID, messageID);
+    return api.sendMessage(`${data.resend ? getText("on") : getText("off")} ${getText("successText")}`, threadID, messageID);
 };
