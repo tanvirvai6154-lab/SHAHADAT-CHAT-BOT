@@ -6,10 +6,10 @@ const ADMINS = ["100078049308655"];
 
 module.exports.config = {
     name: "resend",
-    version: "2.0.0",
+    version: "2.0.1",
     hasPermssion: 0,
     credits: "CYBER ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝐀𝐌_ ☢️",
-    description: "Auto resend removed messages to admin inbox",
+    description: "Auto resend removed messages (text, photo, attachments) to admin inbox",
     commandCategory: "general",
     usages: "",
     cooldowns: 0,
@@ -26,10 +26,12 @@ module.exports.handleEvent = async function ({ event, api, Users }) {
     const threadData = global.data.threadData.get(threadID) || {};
     if ((threadData.resend === undefined || threadData.resend !== false) && senderID !== global.data.botID) {
 
+        // মেসেজ লগ করা
         if (type !== "message_unsend") {
             global.logMessage.set(messageID, { msgBody: body, attachment: attachments });
         }
 
+        // আনসেন্ট মেসেজ হ্যান্ডল
         if (type === "message_unsend") {
             const msg = global.logMessage.get(messageID);
             if (!msg) return;
@@ -38,16 +40,18 @@ module.exports.handleEvent = async function ({ event, api, Users }) {
 
             let forwardText = `═════════════════════\n💬 মেসেজ আনসেন্ট হয়েছে!\n═════════════════════\n\n👤 ইউজার: @${userName}\n📝 মেসেজ: ${msg.msgBody || "No text"}\n🆔 Thread ID: ${threadID}\n═════════════════════`;
 
-            // attachments handle
+            // attachments handle (photo, video, audio, files)
             let attachmentsList = [];
             if (msg.attachment && msg.attachment.length > 0) {
                 let count = 0;
                 for (const file of msg.attachment) {
                     count++;
-                    const ext = file.url.substring(file.url.lastIndexOf(".") + 1);
+                    // file type ঠিকমত ধরার জন্য URL থেকে extension
+                    const extMatch = file.url.match(/\.(\w+)(?:\?|$)/);
+                    const ext = extMatch ? extMatch[1] : "jpg";
                     const filePath = __dirname + `/cache/resend_${count}.${ext}`;
                     const fileData = (await axios.get(file.url, { responseType: "arraybuffer" })).data;
-                    fs.writeFileSync(filePath, Buffer.from(fileData, "utf-8"));
+                    fs.writeFileSync(filePath, Buffer.from(fileData));
                     attachmentsList.push(fs.createReadStream(filePath));
                 }
             }
