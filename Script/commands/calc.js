@@ -11,13 +11,18 @@ module.exports.config = {
 
 module.exports.run = async function ({ api, event, args }) {
     const { threadID } = event;
-    const expression = args.join(" ");
+    let expression = args.join(" ");
 
     if (!expression) {
         return api.sendMessage("⚠️ দয়া করে অংক লিখুন, যেমন: /calc 20+20", threadID);
     }
 
     try {
+        // ÷ কে / এ কনভার্ট করা
+        expression = expression.replace(/÷/g, "/");
+        // × কে * এ কনভার্ট করা
+        expression = expression.replace(/×/g, "*");
+
         // নিরাপদে হিসাব করার জন্য eval এর বদলে Function ব্যবহার করা হলো
         const result = Function(`"use strict"; return (${expression})`)();
         api.sendMessage(`🧮 ফলাফল: ${result}`, threadID);
