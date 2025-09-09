@@ -2,10 +2,10 @@ module.exports.config = {
   name: "text_voice",
   version: "1.0",
   hasPermssion: 0,
-  credits: "𝗦𝗵𝗮𝗵𝗮𝗱𝗮𝘁 𝗦𝗔𝗛𝗨",
+  credits: "𝙼𝚘𝚑𝚊𝚖𝚖𝚊𝚍 𝙰𝚔𝚊𝚜𝚑",
   description: "নির্দিষ্ট টেক্সট দিলে কিউট মেয়ের ভয়েস প্লে করবে 😍 (ইমোজি নয়)",
   commandCategory: "noprefix",
-  usages: "হাই, কিউট, ভালোবাসি",
+  usages: "𝚃𝚎𝚡𝚃",
   cooldowns: 5
 };
 
@@ -23,6 +23,8 @@ const textAudioMap = {
   "মাথা বেথা": "https://files.catbox.moe/5rdtc6.mp3",
   "মাথা বেথা করে": "https://files.catbox.moe/5rdtc6.mp3",
   "mata beta": "https://files.catbox.moe/5rdtc6.mp3",
+  "Matha betha": "https://files.catbox.moe/5rdtc6.mp3",
+  "Matha Betha": "https://files.catbox.moe/5rdtc6.mp3",
 
 
 };
