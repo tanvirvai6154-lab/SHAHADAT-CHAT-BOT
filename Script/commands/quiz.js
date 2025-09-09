@@ -1,85 +1,73 @@
-const axios = require("axios");
-const money = require("./money.js"); // money.js ফাইল import
-
-const baseApiUrl = async () => {
-  const res = await axios.get(
-    "https://raw.githubusercontent.com/Blankid018/D1PT0/main/baseApiUrl.json"
-  );
-  return res.data.api;
+module.exports.config = {
+    name: "quiz",
+    version: "1.0.0",
+    hasPermssion: 0,
+    credits: "Mohammad Akash",
+    description: "কুইজ খেলে 100 Coins উপার্জন করুন",
+    commandCategory: "game",
+    usages: "/quiz",
+    cooldowns: 2
 };
 
-module.exports = {
-  config: {
-    name: "quiz",
-    aliases: ["qz"],
-    version: "1.0",
-    author: "Mohammad Akash",
-    countDown: 0,
-    role: 0,
-    category: "game",
-    guide: "/quiz [bn/en]",
-  },
+const fs = require("fs");
+const path = __dirname + "/moneyData.json";
 
-  onStart: async function({ api, event, usersData, args }) {
-    const input = args.join("").toLowerCase() || "bn";
-    const category = (input === "en" || input === "english") ? "english" : "bangla";
-    const timeout = 300;
+// ডাটা লোড করার ফাংশন
+function loadData() {
+    if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify({}));
+    return JSON.parse(fs.readFileSync(path));
+}
 
-    try {
-      const response = await axios.get(`${await baseApiUrl()}/quiz?category=${category}&q=random`);
-      const quizData = response.data.question;
-      const { question, correctAnswer, options } = quizData;
-      const { a, b, c, d } = options;
-      const namePlayer = await usersData.getName(event.senderID);
+// ডাটা সেভ করার ফাংশন
+function saveData(data) {
+    fs.writeFileSync(path, JSON.stringify(data, null, 2));
+}
 
-      const quizMsg = {
-        body: `\n╭──✦ ${question}\n├‣ A) ${a}\n├‣ B) ${b}\n├‣ C) ${c}\n├‣ D) ${d}\n╰──────────────────‣\nReply with your answer!`,
-      };
+// কুইজ প্রশ্ন এবং উত্তর
+const quizzes = [
+    { q: "বাংলাদেশের রাজধানী কি?", a: "ঢাকা" },
+    { q: "পৃথিবীর বৃহত্তম মহাসাগর কোনটি?", a: "প্রশান্ত মহাসাগর" },
+    { q: "মানবদেহের সবচেয়ে বড় অঙ্গ কোনটি?", a: "চামড়া" },
+    { q: "সূর্যের সবচেয়ে কাছের গ্রহ কোনটি?", a: "বুধ" },
+    { q: "HTML এর পূর্ণরূপ কি?", a: "Hyper Text Markup Language" }
+];
 
-      api.sendMessage(quizMsg, event.threadID, (err, info) => {
+module.exports.run = async function({ api, event }) {
+    const { senderID, threadID } = event;
+    let data = loadData();
+
+    // নতুন ইউজার হলে ডিফল্ট ব্যালেন্স
+    if (!data[senderID]) data[senderID] = { balance: 0 };
+
+    // র্যান্ডম কুইজ নির্বাচন
+    const quiz = quizzes[Math.floor(Math.random() * quizzes.length)];
+
+    // কুইজ মেসেজ
+    api.sendMessage(`❓ কুইজ: ${quiz.q}\nReply এই মেসেজের সাথে সঠিক উত্তর লিখে পাঠাও।`, threadID, (err, info) => {
         global.GoatBot.onReply.set(info.messageID, {
-          type: "reply",
-          commandName: this.config.name,
-          author: event.senderID,
-          messageID: info.messageID,
-          correctAnswer: correctAnswer.toLowerCase(),
-          nameUser: namePlayer,
-          attempts: 0,
+            type: "quiz",
+            question: quiz.q,
+            answer: quiz.a.toLowerCase(),
+            author: senderID,
+            messageID: info.messageID
         });
-        setTimeout(() => {
-          api.unsendMessage(info.messageID).catch(() => {});
-        }, timeout * 1000);
-      }, event.messageID);
+    });
+};
 
-    } catch (error) {
-      console.error(error);
-      api.sendMessage("❌ Error fetching quiz.", event.threadID, event.messageID);
-    }
-  },
+module.exports.onReply = async function({ event, Reply, api }) {
+    const { senderID, threadID, messageID, body } = event;
 
-  onReply: async function({ event, api, Reply, usersData }) {
-    const { correctAnswer, nameUser, author } = Reply;
-    if (event.senderID !== author) return api.sendMessage("❌ This is not your quiz!", event.threadID, event.messageID);
+    if (Reply.type !== "quiz") return;
+    if (senderID !== Reply.author) return api.sendMessage("❌ এই কুইজটি অন্য কারো জন্য।", threadID, messageID);
 
-    const maxAttempts = 2;
-    const userReply = event.body.toLowerCase();
+    const data = loadData();
 
-    if (Reply.attempts >= maxAttempts) {
-      api.unsendMessage(Reply.messageID).catch(() => {});
-      return api.sendMessage(`🚫 | ${nameUser}, max attempts reached!\nCorrect answer: ${correctAnswer}`, event.threadID, event.messageID);
-    }
-
-    if (userReply === correctAnswer) {
-      api.unsendMessage(Reply.messageID).catch(() => {});
-
-      // money.js থেকে 100 Coins অ্যাড করা
-      const newBalance = money.addMoney(author, 100);
-
-      api.sendMessage(`🎉 Congrats ${nameUser}! You earned 100 Coins 💰\n💰 New Balance: ${newBalance}`, event.threadID, event.messageID);
+    if (body.toLowerCase() === Reply.answer) {
+        data[senderID].balance += 100; // সঠিক হলে 100 Coins অ্যাড
+        saveData(data);
+        api.sendMessage(`🎉 সঠিক উত্তর! তুমি পেয়েছ 100 Coins\n💰 বর্তমান ব্যালেন্স: ${data[senderID].balance} Coins`, threadID, messageID);
+        global.GoatBot.onReply.delete(Reply.messageID);
     } else {
-      Reply.attempts += 1;
-      global.GoatBot.onReply.set(Reply.messageID, Reply);
-      api.sendMessage(`❌ Wrong answer. Attempts left: ${maxAttempts - Reply.attempts}`, event.threadID, event.messageID);
+        api.sendMessage(`❌ ভুল উত্তর! আবার চেষ্টা করো।`, threadID, messageID);
     }
-  }
 };
