@@ -1,9 +1,10 @@
 const fs = require("fs");
 const path = __dirname + "/quizData.json"; // কুইজ JSON ফাইল
+const moneyPath = __dirname + "/moneyData.json"; // ইউজারের টাকা JSON
 
 module.exports.config = {
     name: "quiz",
-    version: "1.0.0",
+    version: "1.0.1",
     hasPermssion: 0,
     credits: "Mohammad Akash",
     description: "কুইজ খেলো এবং টাকা জিতে যাও",
@@ -19,7 +20,6 @@ function loadQuiz() {
 }
 
 // ইউজার ডাটা লোড
-const moneyPath = __dirname + "/moneyData.json";
 function loadData() {
     if (!fs.existsSync(moneyPath)) fs.writeFileSync(moneyPath, JSON.stringify({}));
     return JSON.parse(fs.readFileSync(moneyPath));
@@ -41,18 +41,18 @@ module.exports.run = async function({ api, event }) {
     const randomQuiz = quizzes[Math.floor(Math.random() * quizzes.length)];
 
     const quizMsg = `❓ কুইজ: ${randomQuiz.question}\n\n` +
-                    `𝗔) ${randomQuiz.a}\n` +
-                    `𝗕) ${randomQuiz.b}\n` +
-                    `𝗖) ${randomQuiz.c}\n` +
-                    `𝗗) ${randomQuiz.d}\n\n` +
-                    `Reply এই মেসেজের সাথে সঠিক উত্তর লিখে পাঠাও।`;
+                    `A) ${randomQuiz.a}\n` +
+                    `B) ${randomQuiz.b}\n` +
+                    `C) ${randomQuiz.c}\n` +
+                    `D) ${randomQuiz.d}\n\n` +
+                    `Reply এই মেসেজের সাথে শুধু A, B, C বা D লিখে পাঠাও।`;
 
     api.sendMessage(quizMsg, threadID, (err, info) => {
         global.GoatBot.onReply.set(info.messageID, {
             type: "quiz",
             author: senderID,
             messageID: info.messageID,
-            correctAnswer: randomQuiz.answer.toLowerCase(),
+            correctAnswer: randomQuiz.answer.toUpperCase(), // A, B, C, D
             attempts: 0
         });
     });
@@ -69,17 +69,34 @@ module.exports.onReply = async function({ event, Reply }) {
     }
 
     Reply.attempts += 1;
-    if (body.toLowerCase() === Reply.correctAnswer) {
-        let data = JSON.parse(fs.readFileSync(__dirname + "/moneyData.json"));
-        data[senderID].balance += 100;
+    const userAnswer = body.trim().toUpperCase(); // A, B, C, D
+
+    if (userAnswer === Reply.correctAnswer) {
+        let data = loadData();
+        data[senderID].balance += 100; // সঠিক হলে ১০০ Coins অ্যাড
         saveData(data);
-        global.GoatBot.api.sendMessage(`🎉 সঠিক উত্তর! 100 Coins পেয়েছো।\n💰 নতুন বেলেন্স: ${data[senderID].balance}`, threadID, messageID);
+
+        global.GoatBot.api.sendMessage(
+            `🎉 সঠিক উত্তর! 100 Coins পেয়েছো।\n💰 নতুন বেলেন্স: ${data[senderID].balance}`,
+            threadID,
+            messageID
+        );
         global.GoatBot.onReply.delete(messageID);
+
     } else if (Reply.attempts >= 2) {
-        global.GoatBot.api.sendMessage(`❌ ভুল উত্তর। সঠিক উত্তর: ${Reply.correctAnswer}`, threadID, messageID);
+        global.GoatBot.api.sendMessage(
+            `❌ ভুল উত্তর। সঠিক উত্তর: ${Reply.correctAnswer}`,
+            threadID,
+            messageID
+        );
         global.GoatBot.onReply.delete(messageID);
+
     } else {
-        global.GoatBot.api.sendMessage(`❌ ভুল উত্তর। ১ বার চেষ্টা বাকি। আবার চেষ্টা করো।`, threadID, messageID);
+        global.GoatBot.api.sendMessage(
+            `❌ ভুল উত্তর। ১ বার চেষ্টা বাকি। আবার চেষ্টা করো।`,
+            threadID,
+            messageID
+        );
         global.GoatBot.onReply.set(messageID, Reply);
     }
 };
