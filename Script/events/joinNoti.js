@@ -30,7 +30,7 @@ module.exports.run = async function({ api, event }) {
   const botPrefix = global.config.PREFIX || "/";
   const botName = global.config.BOTNAME || "𝗦𝗵𝗮𝗵𝗮𝗱𝗮𝘁 𝗖𝗵𝗮𝘁 𝗕𝗼𝘁";
 
- 
+  // === বটকে গ্রুপে অ্যাড করলে ===
   if (event.logMessageData.addedParticipants.some(i => i.userFbId == api.getCurrentUserID())) {
     await api.changeNickname(`[ ${botPrefix} ] • ${botName}`, threadID, api.getCurrentUserID());
 
@@ -73,12 +73,17 @@ ${botPrefix}Admin
     return;
   }
 
- 
+  // === মেম্বার অ্যাড হলে ===
   try {
     const { createReadStream, readdirSync } = global.nodemodule["fs-extra"];
     let { threadName, participantIDs } = await api.getThreadInfo(threadID);
     const threadData = global.data.threadData.get(parseInt(threadID)) || {};
     let mentions = [], nameArray = [], memLength = [], i = 0;
+
+    // অ্যাড করা ব্যক্তির তথ্য
+    const authorID = event.author;
+    const authorInfo = await api.getUserInfo(authorID);
+    const authorName = authorInfo[authorID].name;
 
     for (let id in event.logMessageData.addedParticipants) {
       const userName = event.logMessageData.addedParticipants[id].fullName;
@@ -88,6 +93,7 @@ ${botPrefix}Admin
     }
     memLength.sort((a, b) => a - b);
 
+    // === মেসেজ ===
     let msg = (typeof threadData.customJoin === "undefined") ?
 `╭•┄┅══❁🌺❁══┅•╮
 আসসালামু আলাইকুম💚
@@ -101,9 +107,9 @@ ${botPrefix}Admin
 ➤ খারাপ ব্যবহার ❌ নয়।  
 ➤ এডমিনের কথা শুনুন।✅  
 
-
 ›› প্রিয় {name},  
-আপনি এই গ্রুপের {soThanhVien} নম্বর মেম্বার!
+আপনি এই গ্রুপের {soThanhVien} নম্বর মেম্বার!  
+➤ Added By : {authorMention}
 
 ›› গ্রুপ: {threadName}
 
@@ -117,8 +123,12 @@ ${botPrefix}Admin
     msg = msg
       .replace(/\{name}/g, nameArray.join(', '))
       .replace(/\{soThanhVien}/g, memLength.join(', '))
-      .replace(/\{threadName}/g, threadName);
+      .replace(/\{threadName}/g, threadName)
+      .replace(/\{authorMention}/g, `@${authorName}`);
 
+    mentions.push({ tag: authorName, id: authorID });
+
+    // === মিডিয়া অ্যাটাচ ===
     const joinGifPath = path.join(__dirname, "cache", "joinGif");
     const files = readdirSync(joinGifPath).filter(file =>
       [".mp4", ".jpg", ".png", ".jpeg", ".gif", ".mp3"].some(ext => file.endsWith(ext))
