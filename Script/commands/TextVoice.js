@@ -15,27 +15,17 @@ const path = require("path");
 
 // Text অনুযায়ী audio URL
 const textAudioMap = {
-  "i love You": "https://files.catbox.moe/npy7kl.mp3",
-  "I love you": "https://files.catbox.moe/npy7kl.mp3",
-  "আই লাভ ইউ": "https://files.catbox.moe/npy7kl.mp3",
-  "apu i love you": "https://files.catbox.moe/npy7kl.mp3",
-  "matha betha": "https://files.catbox.moe/5rdtc6.mp3",
-  "মাথা বেথা": "https://files.catbox.moe/5rdtc6.mp3",
-  "মাথা বেথা করে": "https://files.catbox.moe/5rdtc6.mp3",
+  "i love you": "https://files.catbox.moe/npy7kl.mp3",
   "mata beta": "https://files.catbox.moe/5rdtc6.mp3",
-  "Matha betha": "https://files.catbox.moe/5rdtc6.mp3",
-  "Matha Betha": "https://files.catbox.moe/5rdtc6.mp3",
-
-
 };
 
 module.exports.handleEvent = async ({ api, event }) => {
   const { threadID, messageID, body } = event;
   if (!body) return;
 
-  const key = body.trim();
+  // ছোট হাতের অক্ষরে রূপান্তর
+  const key = body.trim().toLowerCase();
 
-  // কেবলমাত্র টেক্সট চেক, ইমোজি নয়
   const audioUrl = textAudioMap[key];
   if (!audioUrl) return; // যদি টেক্সট ম্যাপে না থাকে কিছু হবে না
 
