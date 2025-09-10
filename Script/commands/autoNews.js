@@ -1,6 +1,6 @@
 // autoNews.js
-// Auto send Bangladesh news every 30 minutes in all groups
-// Credits: Akash
+// Auto send Bangladesh news every 30 minutes
+// Credit: 𝙼𝚘𝚑𝚊𝚖𝚖𝚊𝚍 𝙰𝚔𝚊𝚜𝚑
 
 const axios = require("axios");
 const schedule = require("node-schedule");
@@ -9,53 +9,44 @@ module.exports.config = {
   name: "autoNews",
   version: "1.0.0",
   hasPermssion: 0,
-  credits: "Akash",
-  description: "সব গ্রুপে ৩০ মিনিট পর পর দেশের খবর পাঠাবে ফ্যান্সি স্টাইলে",
-  commandCategory: "Utility",
-  usages: "অটো চলবে, কোনো কমান্ড দরকার নেই",
-  cooldowns: 0
+  credits: "𝙼𝚘𝚑𝚊𝚖𝚖𝚊𝚍 𝙰𝚔𝚊𝚜𝚑",
+  description: "বাংলাদেশের নিউজ অটো আপডেট পাঠাবে প্রতি ৩০ মিনিট পর",
+  commandCategory: "News",
+  cooldowns: 5,
 };
 
-// সব গ্রুপের ID এখানে রাখবে
-let threadList = [];
+let job = null;
 
-// আগের নিউজ ট্র্যাক করার জন্য
-let lastNewsTitle = "";
+module.exports.run = async function({ api, event }) {
+  if (job) {
+    job.cancel();
+    job = null;
+    return api.sendMessage("❌ অটো নিউজ বন্ধ হয়েছে।", event.threadID);
+  }
 
-// নিউজ পাঠানোর ফাংশন
-const sendNews = async (api, threadID) => {
-  try {
-    const res = await axios.get(
-      "https://newsapi.org/v2/top-headlines?country=bd&apiKey=YOUR_API_KEY"
-    );
+  job = schedule.scheduleJob("*/30 * * * *", async function () {
+    try {
+      const url = `https://newsapi.org/v2/top-headlines?country=bd&apiKey=68af051e74bb44e0bf6ce50c98df5b73`;
 
-    if (res.data.articles && res.data.articles.length > 0) {
-      const article = res.data.articles[0];
+      const res = await axios.get(url);
+      const articles = res.data.articles.slice(0, 5);
 
-      // আগের নিউজের সাথে মিল হলে স্কিপ
-      if (article.title === lastNewsTitle) return;
+      if (!articles.length) return;
 
-      lastNewsTitle = article.title;
+      let newsMsg = "📰 সর্বশেষ বাংলাদেশ নিউজ আপডেট:\n\n";
+      articles.forEach((a, i) => {
+        newsMsg += `${i + 1}. ${a.title}\n${a.url}\n\n`;
+      });
 
-      const message = `🇧🇩 🔥 নতুন ব্রেকিং নিউজ 🔥 🇧🇩\n\n📰 ${article.title}\n📌 বিস্তারিত: ${article.url}\n⏰ আপডেট সময়: ${new Date().toLocaleTimeString("bn-BD")}`;
+      // Send to all groups
+      global.data.allThreadID.forEach(threadID => {
+        api.sendMessage(newsMsg, threadID);
+      });
 
-      api.sendMessage(message, threadID);
+    } catch (err) {
+      console.error(err);
     }
-  } catch (err) {
-    console.error("News Error:", err.message);
-  }
-};
+  });
 
-// প্রতি ৩০ মিনিটে সব গ্রুপে নিউজ পাঠানো
-schedule.scheduleJob("*/30 * * * *", async function () {
-  for (const threadID of threadList) {
-    await sendNews(global.client.api, threadID);
-  }
-});
-
-// নতুন গ্রুপে বট অ্যাড হলে threadID যোগ করা
-module.exports.handleEvent = async function({ event }) {
-  if (!threadList.includes(event.threadID)) {
-    threadList.push(event.threadID);
-  }
+  return api.sendMessage("✅ অটো নিউজ চালু হয়েছে (প্রতি ৩০ মিনিট পর পাঠাবে)।", event.threadID);
 };
