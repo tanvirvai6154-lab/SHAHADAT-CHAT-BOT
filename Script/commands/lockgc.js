@@ -1,17 +1,15 @@
 // lockgc.js
-// গ্রুপ লক/আনলক সিস্টেম
-// নন-অ্যাডমিনদের মেসেজ ব্লক করবে
+// গ্রুপ লক/আনলক সিস্টেম (ফলে ব্যাকআপ সহ)
 
 module.exports.config = {
   name: "lockgc",
-  version: "1.0.0",
+  version: "1.1.0",
   credits: "Akash",
-  description: "Lock & Unlock Group messages using /lockgc"
+  description: "Lock & Unlock Group messages with backup alert system"
 };
 
 let lockStatus = {}; // group-wise লক স্ট্যাটাস
 
-// কমান্ড হ্যান্ডলার
 module.exports.run = async function({ api, event, args }) {
   const threadID = event.threadID;
   const senderID = event.senderID;
@@ -41,26 +39,31 @@ module.exports.run = async function({ api, event, args }) {
     return api.sendMessage(`📌 গ্রুপের স্ট্যাটাস: ${status}`, threadID);
   }
 
-  // হেল্প মেসেজ
-  const help = `🛠️ গ্রুপ লক কমান্ড ব্যবহার:\n• /lockgc lockgc — গ্রুপ লক করবে\n• /lockgc unlockgc — গ্রুপ আনলক করবে\n• /lockgc statusgc — স্ট্যাটাস দেখাবে`;
+  const help = `🛠️ গ্রুপ লক কমান্ড:\n• /lockgc lockgc — গ্রুপ লক করবে\n• /lockgc unlockgc — গ্রুপ আনলক করবে\n• /lockgc statusgc — স্ট্যাটাস দেখাবে`;
   return api.sendMessage(help, threadID);
 };
 
-// নন-অ্যাডমিন মেসেজ ব্লক
+// নন-অ্যাডমিন মেসেজ ব্লক / সতর্কবার্তা
 module.exports.handleEvent = async function({ api, event }) {
   const threadID = event.threadID;
   const senderID = event.senderID;
 
-  if (lockStatus[threadID]) {
+  if (!lockStatus[threadID]) return;
+
+  try {
     const threadInfo = await api.getThreadInfo(threadID);
     const isAdmin = threadInfo.adminIDs.some(e => e.id == senderID);
 
     if (!isAdmin) {
-      try {
-        await api.unsendMessage(event.messageID);
-      } catch (e) {
-        // কোনো সমস্যা হলে সাইলেন্ট ফেইল
+      // বট যদি অ্যাডমিন হয়, মেসেজ ডিলিট করবে
+      if (threadInfo.adminIDs.some(e => e.id == api.getCurrentUserID())) {
+        try { await api.unsendMessage(event.messageID); } catch(e) {}
+      } else {
+        // বট অ্যাডমিন না হলে সতর্কবার্তা পাঠাবে
+        return api.sendMessage("🚫 গ্রুপ লক আছে — আপনি লিখতে পারবেন না!", threadID);
       }
     }
+  } catch (e) {
+    console.error("lockgc handleEvent error:", e);
   }
 };
