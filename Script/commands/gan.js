@@ -16,7 +16,7 @@ module.exports.config = {
 
 // Catbox লিংক দেওয়া হলো
 const songLinks = [
-  "https://files.catbox.moe/6cl65w.mp4"
+  "https://files.catbox.moe/92riji.mp3"
 ];
 
 module.exports.run = async function ({ api, event, args }) {
